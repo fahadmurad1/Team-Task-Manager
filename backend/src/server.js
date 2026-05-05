@@ -1,45 +1,59 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const connectDB = require('./config/database');
-const errorHandler = require('./middleware/errorHandler');
+// server/src/server.js (ya server.js)
+
+// 1) Imports
+require("dotenv").config();
+const path = require("path");
+const express = require("express");
+const cors = require("cors");
+const connectDB = require("./config/database");
+const errorHandler = require("./middleware/errorHandler");
 
 // Routes
-const authRoutes = require('./routes/authRoutes');
-const projectRoutes = require('./routes/projectRoutes');
-const taskRoutes = require('./routes/taskRoutes');
+const authRoutes = require("./routes/authRoutes");
+const projectRoutes = require("./routes/projectRoutes");
+const taskRoutes = require("./routes/taskRoutes");
 
+// 2) App init
 const app = express();
 
-// Connect to Database
+// 3) Connect to Database
 connectDB();
 
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
+// 4) Core middlewares
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/tasks', taskRoutes);
+// 5) Static public folder (for favicon etc.)
+app.use(express.static(path.join(__dirname, "public")));
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ message: 'Server is running' });
+// 6) Favicon fallback (agar file na bhi ho to 204, 404 nahi)
+app.get("/favicon.ico", (req, res) => res.status(204).end());
+
+// 7) Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/tasks", taskRoutes);
+
+// 8) Health check
+app.get("/api/health", (req, res) => {
+  res.json({ message: "Server is running" });
 });
 
-// Error handling
+// 9) Error handling
 app.use(errorHandler);
 
-// 404 handler
+// 10) 404 handler (last me)
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({ message: "Route not found" });
 });
 
+// 11) Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
